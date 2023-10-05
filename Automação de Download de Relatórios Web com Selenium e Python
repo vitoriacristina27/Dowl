@@ -1,0 +1,479 @@
+import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+import os
+import shutil
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
+from datetime import datetime, timedelta
+import openpyxl
+
+
+
+# Configurar opções do Chrome (opcional)
+chrome_options = webdriver.ChromeOptions()
+
+
+# Crie uma instância do driver do Chrome
+driver = webdriver.Chrome(options=chrome_options)
+# URL da página de login
+login_url = ''
+
+# Abra a página de login no navegador
+driver.get(login_url)
+
+# Localize os campos de login, senha e botão de login
+login_input = driver.find_element(By.ID, 'ucUsuarioSenha_txtLoginUsuario')
+password_input = driver.find_element(By.ID, 'ucUsuarioSenha_txtSenha')
+login_button = driver.find_element(By.ID, 'ucUsuarioSenha_btnLogin')
+
+# Preencha os campos de login e senha
+login_input.send_keys('')  # Substitua 'seu_login' pelo seu nome de usuário
+password_input.send_keys('')  # Substitua 'sua_senha' pela sua senha
+
+# Clique no botão de login
+login_button.click()
+
+# Localize os campos de login, senha e botão de login
+login_input = driver.find_element(By.ID, 'ucUsuarioSenha_txtLoginUsuario')
+password_input = driver.find_element(By.ID, 'ucUsuarioSenha_txtSenha')
+login_button = driver.find_element(By.ID, 'ucUsuarioSenha_btnLogin')
+
+# Preencha os campos de login e senha
+login_input.send_keys('Adm.Vitoria')  # Substitua 'seu_login' pelo seu nome de usuário
+password_input.send_keys('AnaBia#12')  # Substitua 'sua_senha' pela sua senha
+
+# Verifique se a página atual contém um captcha (ajuste conforme necessário)
+if "captcha" in driver.page_source.lower():
+    input("Resolva o captcha manualmente e pressione Enter após a resolução.")
+    # Envie a tecla Enter para o botão de login depois de resolver o captcha
+    login_button.send_keys(Keys.ENTER)
+
+# Verifique se há alertas e aceite-os
+while True:
+    try:
+        alert = driver.switch_to.alert
+        alert.accept()
+    except:
+        break
+
+# Aguarde algum tempo para que a página de relatório carregue completamente (ajuste conforme necessário)
+time.sleep(5)
+
+# Localize as categorias que você precisa interagir
+categoria1 = driver.find_element(By.XPATH, '//*[@id="_ctl7_Menu1-menuItem003"]')  # Substitua 'ID_da_categoria1' pelo ID correto
+categoria2 = driver.find_element(By.XPATH, '//*[@id="_ctl7_Menu1-menuItem003-subMenu-menuItem009"]')  # Substitua 'ID_da_categoria2' pelo ID correto
+
+# Use a classe ActionChains para mover o cursor do mouse para cada categoria
+actions = ActionChains(driver)
+actions.move_to_element(categoria1).perform()
+actions.move_to_element(categoria2).perform()
+
+# Agora você pode localizar e clicar no elemento do relatório
+relatorio_link = driver.find_element(By.XPATH, '//*[@id="_ctl7_Menu1-menuItem003-subMenu-menuItem009-subMenu-menuItem001"]')
+relatorio_link.click()
+
+
+# Aguarde algum tempo para que a página de relatório carregue completamente (ajuste conforme necessário)
+time.sleep(3)
+
+# Localize os campos de entrada de data pelo ID (substitua pelos IDs reais)
+campo_data_1 = driver.find_element(By.XPATH, '//*[@id="txtDataIni"]')
+campo_data_2 = driver.find_element(By.XPATH, '//*[@id="txtDataFim"]')
+campo_valor_ini = driver.find_element(By.XPATH, '//*[@id="txtValorIni"]')
+time.sleep(3)
+# Limpe qualquer texto existente nos campos
+campo_data_1.clear()
+campo_data_2.clear()
+
+# Insira novos valores de data nos campos
+campo_data_1.send_keys('01/09/2023')
+campo_data_2.send_keys('31/10/2023')
+campo_valor_ini.send_keys('01')
+time.sleep(3)
+
+# Localize o elemento de seleção pelo XPath
+select_element = driver.find_element(By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')
+
+
+select_container = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')))
+select_container.click()
+
+# Aguarde até que a opção "CSV" esteja disponível na lista suspensa e clique nela
+option_csv = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//li[text()="CSV"]')))
+option_csv.click()
+time.sleep(5)
+
+
+# Localize o botão "Gerar Relatório" e clique nele
+botao_gerar_relatorio = driver.find_element(By.XPATH, '//*[@id="btnGerarRel"]')
+botao_gerar_relatorio.click()
+
+# Diretório de downloads padrão do Chrome
+diretorio_downloads = os.path.expanduser(r'\Downloads')
+
+# Espere pelo download do arquivo por um tempo específico
+tempo_max_espera = 100  # Tempo máximo de espera em segundos
+tempo_espera = 0
+
+while tempo_espera < tempo_max_espera:
+    # Liste os arquivos no diretório de downloads antes do download
+    arquivos_antes = set(os.listdir(diretorio_downloads))
+    
+    # Inicie o download (certifique-se de que o download seja iniciado aqui)
+    # ... (seu código para iniciar o download)
+    
+    # Aguarde um tempo curto antes de verificar novamente
+    time.sleep(1)
+    tempo_espera += 1
+
+    # Liste os arquivos no diretório de downloads após o download
+    arquivos_depois = set(os.listdir(diretorio_downloads))
+
+    # Encontre o arquivo que foi adicionado após o download
+    arquivo_baixado = arquivos_depois - arquivos_antes
+
+    if arquivo_baixado:
+        # Verifique se o arquivo não é uma extensão .crdownload (ainda em processo de download)
+        arquivo_baixado = arquivo_baixado.pop()  # Converta para string
+        caminho_arquivo_baixado = os.path.join(diretorio_downloads, arquivo_baixado)
+        
+        if not arquivo_baixado.endswith(".crdownload"):
+            # O arquivo foi baixado com sucesso, mova-o para o diretório de destino
+            diretorio_destino = r'Z:'  # Substitua pelo diretório de destino desejado
+            if not os.path.exists(diretorio_destino):
+                os.makedirs(diretorio_destino)
+
+            caminho_arquivo_destino = os.path.join(diretorio_destino, arquivo_baixado)
+            shutil.move(caminho_arquivo_baixado, caminho_arquivo_destino)
+            
+            # Renomeie o arquivo para "previsãodepagamentooutubro.csv"
+            novo_nome_arquivo = os.path.join(diretorio_destino, "previsãodepagamentooutubro.csv")
+            os.rename(caminho_arquivo_destino, novo_nome_arquivo)
+            
+            print(f"Arquivo renomeado e movido para {novo_nome_arquivo}")
+            break
+    else:
+        print("O arquivo ainda está sendo baixado...")
+else:
+    print("O arquivo não foi baixado com sucesso após o tempo limite de espera.")
+
+
+# Volte à página inicial ou à página anterior onde você acessou o primeiro relatório
+driver.back()  # Isso irá navegar de volta à página anterior
+
+# Localize as categorias novamente
+categoria3 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003"]')
+categoria4 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009"]')
+
+# Use a classe ActionChains para mover o cursor do mouse para cada categoria
+actions = ActionChains(driver)
+actions.move_to_element(categoria3).perform()
+actions.move_to_element(categoria4).perform()
+
+# Agora você pode localizar e clicar no elemento do segundo relatório
+relatorio_link_segundo = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009-subMenu-menuItem003"]')
+relatorio_link_segundo.click()
+
+# Aguarde algum tempo para que a página de relatório carregue completamente (ajuste conforme necessário)
+time.sleep(3)
+
+# Localize os campos de entrada de data pelo ID (substitua pelos IDs reais)
+campo_data_1 = driver.find_element(By.XPATH, '//*[@id="txtDataPagIni"]')
+campo_data_2 = driver.find_element(By.XPATH, '//*[@id="txtDataPagFim"]')
+time.sleep(3)
+# Limpe qualquer texto existente nos campos
+campo_data_1.clear()
+campo_data_2.clear()
+
+
+# Obtenha a data do dia anterior no formato DD/MM/AAAA
+data_ontem = (datetime.now() - timedelta(days=1)).strftime('%d/%m/%Y')
+
+# Preencha os campos de data com a data do dia anterior
+campo_data_1.send_keys(data_ontem)
+campo_data_2.send_keys(data_ontem)
+
+# Localize o elemento de seleção pelo XPath
+select_element = driver.find_element(By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')
+
+
+select_container = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')))
+select_container.click()
+
+# Aguarde até que a opção "CSV" esteja disponível na lista suspensa e clique nela
+option_csv = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//li[text()="CSV"]')))
+option_csv.click()
+time.sleep(5)
+
+
+# Localize o botão "Gerar Relatório" e clique nele
+botao_gerar_relatorio = driver.find_element(By.XPATH, '//*[@id="btnGerarRel"]')
+botao_gerar_relatorio.click()
+
+# Diretório de downloads padrão do Chrome
+diretorio_downloads = os.path.expanduser(r'\Downloads')
+
+# Espere pelo download do arquivo por um tempo específico
+tempo_max_espera = 100  # Tempo máximo de espera em segundos
+tempo_espera = 0
+
+while tempo_espera < tempo_max_espera:
+    # Liste os arquivos no diretório de downloads antes do download
+    arquivos_antes = set(os.listdir(diretorio_downloads))
+    
+    # Inicie o download (certifique-se de que o download seja iniciado aqui)
+    # ... (seu código para iniciar o download)
+    
+    # Aguarde um tempo curto antes de verificar novamente
+    time.sleep(1)
+    tempo_espera += 1
+
+    # Liste os arquivos no diretório de downloads após o download
+    arquivos_depois = set(os.listdir(diretorio_downloads))
+
+    # Encontre o arquivo que foi adicionado após o download
+    arquivo_baixado = arquivos_depois - arquivos_antes
+
+    if arquivo_baixado:
+        # Verifique se o arquivo não é uma extensão .crdownload (ainda em processo de download)
+        arquivo_baixado = arquivo_baixado.pop()  # Converta para string
+        caminho_arquivo_baixado = os.path.join(diretorio_downloads, arquivo_baixado)
+        
+        if not arquivo_baixado.endswith(".crdownload"):
+            # O arquivo foi baixado com sucesso, mova-o para o diretório de destino
+            diretorio_destino = r'Z:'  # Substitua pelo diretório de destino desejado
+            if not os.path.exists(diretorio_destino):
+                os.makedirs(diretorio_destino)
+
+            caminho_arquivo_destino = os.path.join(diretorio_destino, arquivo_baixado)
+            shutil.move(caminho_arquivo_baixado, caminho_arquivo_destino)
+            
+            # Renomeie o arquivo para "previsãodepagamentooutubro.csv"
+            novo_nome_arquivo = os.path.join(diretorio_destino, "pagamentosconfirmados.csv")
+            os.rename(caminho_arquivo_destino, novo_nome_arquivo)
+            
+            print(f"Arquivo renomeado e movido para {novo_nome_arquivo}")
+            break
+    else:
+        print("O arquivo ainda está sendo baixado...")
+else:
+    print("O arquivo não foi baixado com sucesso após o tempo limite de espera.")
+
+
+# Volte à página inicial ou à página anterior onde você acessou o primeiro relatório
+driver.back()  # Isso irá navegar de volta à página anterior
+
+# Localize as categorias novamente
+categoria5 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003"]')
+categoria6 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009"]')
+
+# Use a classe ActionChains para mover o cursor do mouse para cada categoria
+actions = ActionChains(driver)
+actions.move_to_element(categoria5).perform()
+actions.move_to_element(categoria6).perform()
+
+# Agora você pode localizar e clicar no elemento do segundo relatório
+relatorio_link_segundo = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009-subMenu-menuItem002"]')
+relatorio_link_segundo.click()
+
+# Aguarde algum tempo para que a página de relatório carregue completamente (ajuste conforme necessário)
+time.sleep(3)
+
+# Localize os campos de entrada de data pelo ID (substitua pelos IDs reais)
+campo_data_1 = driver.find_element(By.XPATH, '//*[@id="txtDataPagIni"]')
+campo_data_2 = driver.find_element(By.XPATH, '//*[@id="txtDataPagFim"]')
+time.sleep(3)
+# Limpe qualquer texto existente nos campos
+campo_data_1.clear()
+campo_data_2.clear()
+
+
+# Obtenha a data do dia anterior no formato DD/MM/AAAA
+data_ontem = (datetime.now() - timedelta(days=1)).strftime('%d/%m/%Y')
+
+# Preencha os campos de data com a data do dia anterior
+campo_data_1.send_keys(data_ontem)
+campo_data_2.send_keys(data_ontem)
+
+# Localize o elemento de seleção pelo XPath
+select_element = driver.find_element(By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')
+
+
+select_container = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')))
+select_container.click()
+
+# Aguarde até que a opção "CSV" esteja disponível na lista suspensa e clique nela
+option_csv = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//li[text()="CSV"]')))
+option_csv.click()
+time.sleep(5)
+
+
+# Localize o botão "Gerar Relatório" e clique nele
+botao_gerar_relatorio = driver.find_element(By.XPATH, '//*[@id="btnGerarRel"]')
+botao_gerar_relatorio.click()
+
+# Diretório de downloads padrão do Chrome
+diretorio_downloads = os.path.expanduser(r'\Downloads')
+
+# Espere pelo download do arquivo por um tempo específico
+tempo_max_espera = 100  # Tempo máximo de espera em segundos
+tempo_espera = 0
+
+while tempo_espera < tempo_max_espera:
+    # Liste os arquivos no diretório de downloads antes do download
+    arquivos_antes = set(os.listdir(diretorio_downloads))
+    
+    # Inicie o download (certifique-se de que o download seja iniciado aqui)
+    # ... (seu código para iniciar o download)
+    
+    # Aguarde um tempo curto antes de verificar novamente
+    time.sleep(1)
+    tempo_espera += 1
+
+    # Liste os arquivos no diretório de downloads após o download
+    arquivos_depois = set(os.listdir(diretorio_downloads))
+
+    # Encontre o arquivo que foi adicionado após o download
+    arquivo_baixado = arquivos_depois - arquivos_antes
+
+    if arquivo_baixado:
+        # Verifique se o arquivo não é uma extensão .crdownload (ainda em processo de download)
+        arquivo_baixado = arquivo_baixado.pop()  # Converta para string
+        caminho_arquivo_baixado = os.path.join(diretorio_downloads, arquivo_baixado)
+        
+        if not arquivo_baixado.endswith(".crdownload"):
+            # O arquivo foi baixado com sucesso, mova-o para o diretório de destino
+            diretorio_destino = r'Z'  # Substitua pelo diretório de destino desejado
+            if not os.path.exists(diretorio_destino):
+                os.makedirs(diretorio_destino)
+
+            caminho_arquivo_destino = os.path.join(diretorio_destino, arquivo_baixado)
+            shutil.move(caminho_arquivo_baixado, caminho_arquivo_destino)
+            
+            # Renomeie o arquivo para "previsãodepagamentooutubro.csv"
+            novo_nome_arquivo = os.path.join(diretorio_destino, "antecipações.csv")
+            os.rename(caminho_arquivo_destino, novo_nome_arquivo)
+            
+            print(f"Arquivo renomeado e movido para {novo_nome_arquivo}")
+            break
+    else:
+        print("O arquivo ainda está sendo baixado...")
+else:
+    print("O arquivo não foi baixado com sucesso após o tempo limite de espera.")
+
+
+# Volte à página inicial ou à página anterior onde você acessou o primeiro relatório
+driver.back()  # Isso irá navegar de volta à página anterior
+
+# Localize as categorias novamente
+categoria7 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003"]')
+categoria8 = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009"]')
+
+# Use a classe ActionChains para mover o cursor do mouse para cada categoria
+actions = ActionChains(driver)
+actions.move_to_element(categoria7).perform()
+actions.move_to_element(categoria8).perform()
+
+# Agora você pode localizar e clicar no elemento do segundo relatório
+relatorio_link_segundo = driver.find_element(By.XPATH, '//*[@id="_ctl6_Menu1-menuItem003-subMenu-menuItem009-subMenu-menuItem000"]')
+relatorio_link_segundo.click()
+
+# Aguarde algum tempo para que a página de relatório carregue completamente (ajuste conforme necessário)
+time.sleep(3)
+
+# Localize os campos de entrada de data pelo ID (substitua pelos IDs reais)
+campo_data_1 = driver.find_element(By.XPATH, '//*[@id="txtDataIni"]')
+campo_data_2 = driver.find_element(By.XPATH, '//*[@id="txtDataFim"]')
+time.sleep(3)
+# Limpe qualquer texto existente nos campos
+campo_data_1.clear()
+campo_data_2.clear()
+
+
+
+# Preencha os campos de data com a data do dia anterior
+campo_data_1.send_keys('01/09/2023')
+campo_data_2.send_keys('31/10/2023')
+
+# Localize o elemento de seleção pelo XPath
+select_element = driver.find_element(By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')
+
+
+select_container = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="select2-dlTipoSaidaRel-container"]')))
+select_container.click()
+
+# Aguarde até que a opção "CSV" esteja disponível na lista suspensa e clique nela
+option_csv = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//li[text()="CSV"]')))
+option_csv.click()
+time.sleep(5)
+
+# Localize o elemento de seleção pelo XPath
+select_element = driver.find_element(By.XPATH, '//*[@id="select2-dlTpData-container"]')
+
+# Clique no elemento de seleção para abrir o menu suspenso
+select_element.click()
+
+# Aguarde até que a opção "Vencimento" esteja disponível na lista suspensa e clique nela
+option_vencimento = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//li[text()="Vencimento"]')))
+option_vencimento.click()
+
+
+
+# Localize o botão "Gerar Relatório" e clique nele
+botao_gerar_relatorio = driver.find_element(By.XPATH, '//*[@id="btnGerarRel"]')
+botao_gerar_relatorio.click()
+
+# Diretório de downloads padrão do Chrome
+diretorio_downloads = os.path.expanduser(r'\Downloads')
+
+# Espere pelo download do arquivo por um tempo específico
+tempo_max_espera = 100  # Tempo máximo de espera em segundos
+tempo_espera = 0
+
+while tempo_espera < tempo_max_espera:
+    # Liste os arquivos no diretório de downloads antes do download
+    arquivos_antes = set(os.listdir(diretorio_downloads))
+    
+    # Inicie o download (certifique-se de que o download seja iniciado aqui)
+    # ... (seu código para iniciar o download)
+    
+    # Aguarde um tempo curto antes de verificar novamente
+    time.sleep(1)
+    tempo_espera += 1
+
+    # Liste os arquivos no diretório de downloads após o download
+    arquivos_depois = set(os.listdir(diretorio_downloads))
+
+    # Encontre o arquivo que foi adicionado após o download
+    arquivo_baixado = arquivos_depois - arquivos_antes
+
+    if arquivo_baixado:
+        # Verifique se o arquivo não é uma extensão .crdownload (ainda em processo de download)
+        arquivo_baixado = arquivo_baixado.pop()  # Converta para string
+        caminho_arquivo_baixado = os.path.join(diretorio_downloads, arquivo_baixado)
+        
+        if not arquivo_baixado.endswith(".crdownload"):
+            # O arquivo foi baixado com sucesso, mova-o para o diretório de destino
+            diretorio_destino = r'Z:'  # Substitua pelo diretório de destino desejado
+            if not os.path.exists(diretorio_destino):
+                os.makedirs(diretorio_destino)
+
+            caminho_arquivo_destino = os.path.join(diretorio_destino, arquivo_baixado)
+            shutil.move(caminho_arquivo_baixado, caminho_arquivo_destino)
+            
+            # Renomeie o arquivo para "previsãodepagamentooutubro.csv"
+            novo_nome_arquivo = os.path.join(diretorio_destino, "lançamentoextra.csv")
+            os.rename(caminho_arquivo_destino, novo_nome_arquivo)
+            
+            print(f"Arquivo renomeado e movido para {novo_nome_arquivo}")
+            break
+    else:
+        print("O arquivo ainda está sendo baixado...")
+else:
+    print("O arquivo não foi baixado com sucesso após o tempo limite de espera.")
+
